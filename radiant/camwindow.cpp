@@ -430,77 +430,31 @@ void CamWnd::Cam_MouseControl( float dtime ){
 }
 
 void CamWnd::Cam_KeyControl( float dtime ) {
-	static vec3_t avelocity;
-	static vec3_t velocity;
-
-	const vec3_t up = { 0, 0, 1 };
 
 	// Update angles
 	if ( m_Camera.movementflags & MOVE_ROTLEFT ) {
-		avelocity[YAW] += dtime * g_PrefsDlg.m_nAngleSpeed;
+		m_Camera.angles[YAW] += 15 * dtime * g_PrefsDlg.m_nAngleSpeed;
 	}
 	if ( m_Camera.movementflags & MOVE_ROTRIGHT ) {
-		avelocity[YAW] -= dtime * g_PrefsDlg.m_nAngleSpeed;
-	}
-	if ( m_Camera.movementflags & MOVE_ROTUP ) {
-		avelocity[PITCH] += dtime * g_PrefsDlg.m_nAngleSpeed;
-	}
-	if ( m_Camera.movementflags & MOVE_ROTDOWN ) {
-		avelocity[PITCH] -= dtime * g_PrefsDlg.m_nAngleSpeed;
+		m_Camera.angles[YAW] -= 15 * dtime * g_PrefsDlg.m_nAngleSpeed;
 	}
 
-	// Now rotate the angles by the scaled velocity
-	VectorMA( m_Camera.angles, dtime, avelocity, m_Camera.angles );
-
-	if ( m_Camera.angles[PITCH] > 90.f ) {
-		m_Camera.angles[PITCH] = 90.f;
-	} else if ( m_Camera.angles[PITCH] < -90.f) {
-		m_Camera.angles[PITCH] = -90.f;
-	}
-
-	// And then add some friction to slow us down
-	VectorScale( avelocity, 1.f - dtime, avelocity );
-	if ( VectorLength( avelocity ) < 1.f ) {
-		VectorClear( avelocity );
-	}
-
-	// Update velocity
+	// Update position
 	if ( m_Camera.movementflags & MOVE_FORWARD ) {
-		VectorMA( velocity, dtime * g_PrefsDlg.m_nMoveSpeed, m_Camera.forward, velocity );
+		VectorMA( m_Camera.origin, dtime * g_PrefsDlg.m_nMoveSpeed, m_Camera.forward, m_Camera.origin );
 	}
 	if ( m_Camera.movementflags & MOVE_BACK ) {
-		VectorMA( velocity, -dtime * g_PrefsDlg.m_nMoveSpeed, m_Camera.forward, velocity );
+		VectorMA( m_Camera.origin, -dtime * g_PrefsDlg.m_nMoveSpeed, m_Camera.forward, m_Camera.origin );
 	}
 	if ( m_Camera.movementflags & MOVE_STRAFELEFT ) {
-		VectorMA( velocity, -dtime * g_PrefsDlg.m_nMoveSpeed, m_Camera.right, velocity );
+		VectorMA( m_Camera.origin, -dtime * g_PrefsDlg.m_nMoveSpeed, m_Camera.right, m_Camera.origin );
 	}
 	if ( m_Camera.movementflags & MOVE_STRAFERIGHT ) {
-		VectorMA( velocity, dtime * g_PrefsDlg.m_nMoveSpeed, m_Camera.right, velocity );
-	}
-	if ( m_Camera.movementflags & MOVE_UP ) {
-		VectorMA( velocity, dtime * g_PrefsDlg.m_nMoveSpeed, up, velocity );
-	}
-	if ( m_Camera.movementflags & MOVE_DOWN ) {
-		VectorMA( velocity, -dtime * g_PrefsDlg.m_nMoveSpeed, up, velocity );
+		VectorMA( m_Camera.origin, dtime * g_PrefsDlg.m_nMoveSpeed, m_Camera.right, m_Camera.origin );
 	}
 
-	// Now move the origin by the scaled velocity
-	VectorMA( m_Camera.origin, dtime, velocity, m_Camera.origin );
-
-	// And then add some friction to slow us down
-	VectorScale( velocity, 1.f - dtime, velocity );
-	if ( VectorLength( velocity ) < 1.f ) {
-		VectorClear( velocity );
-	}
-
-	// Save a screen update
-	if (!VectorCompare( vec3_origin, velocity ) || !VectorCompare( vec3_origin, avelocity ) ) {
-
-		// When m_bFreeMove is enabled, mousecontrol does the update
-		if ( m_bFreeMove ) {
-			return;
-		}
-
+	// Save a screen update (when m_bFreeMove is enabled, mousecontrol does the update)
+	if ( !m_bFreeMove && m_Camera.movementflags ) {
 		int nUpdate = ( g_PrefsDlg.m_bCamXYUpdate ) ? ( W_CAMERA | W_XY ) : ( W_CAMERA );
 		Sys_UpdateWindows( nUpdate );
 		g_pParentWnd->OnTimer();

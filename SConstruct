@@ -3,9 +3,7 @@
 # TTimo <ttimo@ttimo.net>
 # http://scons.org/
 
-
-
-import sys, os, platform, pickle
+import sys, os, platform, cPickle
 
 import utils, config
 
@@ -45,10 +43,10 @@ active_configs = []
 # load up configurations from the save file
 if ( os.path.exists( conf_filename ) ):
 	f = open( conf_filename )
-	print( 'reading saved configuration from site.conf' )
+	print 'reading saved configuration from site.conf'
 	try:
 		while ( True ):
-			c = pickle.load( f )
+			c = cPickle.load( f )
 			active_configs.append( c )
 	except:
 		pass
@@ -59,12 +57,12 @@ active_configs = config.ConfigParser().parseStatements( active_configs, config_s
 assert( len( active_configs ) >= 1 )
 
 # save the config
-print( 'saving updated configuration' )
+print 'saving updated configuration'
 f = open( conf_filename, 'wb' )
 for c in active_configs:
-	pickle.dump( c, f, -1 )
+	cPickle.dump( c, f, -1 )
 
-print( 'emit build rules' )
+print 'emit build rules'
 for c in active_configs:
-	print( 'emit configuration: %s' % repr( c ) )
+	print 'emit configuration: %s' % repr( c )
 	c.emit()

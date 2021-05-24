@@ -72,6 +72,8 @@ int CountBits( byte *bits, int numbits ){
 }
 
 int c_fullskip;
+int c_portalskip, c_leafskip;
+int c_vistest, c_mighttest;
 
 int c_chop, c_nochop;
 

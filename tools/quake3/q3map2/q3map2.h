@@ -276,7 +276,6 @@
 #define SUPER_NORMAL_SIZE       4
 #define SUPER_DELUXEL_SIZE      3
 #define BSP_DELUXEL_SIZE        3
-#define SUPER_FLOODLIGHT_SIZE   1
 
 #define VERTEX_LUXEL( s, v )    ( vertexLuxels[ s ] + ( ( v ) * VERTEX_LUXEL_SIZE ) )
 #define RAD_VERTEX_LUXEL( s, v )( radVertexLuxels[ s ] + ( ( v ) * VERTEX_LUXEL_SIZE ) )
@@ -289,7 +288,6 @@
 #define SUPER_ORIGIN( x, y )    ( lm->superOrigins + ( ( ( ( y ) * lm->sw ) + ( x ) ) * SUPER_ORIGIN_SIZE ) )
 #define SUPER_NORMAL( x, y )    ( lm->superNormals + ( ( ( ( y ) * lm->sw ) + ( x ) ) * SUPER_NORMAL_SIZE ) )
 #define SUPER_DIRT( x, y )      ( lm->superNormals + ( ( ( ( y ) * lm->sw ) + ( x ) ) * SUPER_NORMAL_SIZE ) + 3 )   /* stash dirtyness in normal[ 3 ] */
-#define SUPER_FLOODLIGHT( x, y )    ( lm->superFloodLight + ( ( ( ( y ) * lm->sw ) + ( x ) ) * SUPER_FLOODLIGHT_SIZE ) )
 
 
 
@@ -575,7 +573,6 @@ typedef struct game_s
 	qboolean wolfLight;                                 /* when true, lights work like wolf q3map  */
 	int lightmapSize;                                   /* bsp lightmap width/height */
 	float lightmapGamma;                                /* default lightmap gamma */
-	float lightmapExposure;                             /* default lightmap exposure */
 	float lightmapCompensate;                           /* default lightmap compensate value */
 	int miniMapSize;                                    /* minimap size */
 	float miniMapSharpen;                               /* minimap sharpening coefficient */
@@ -979,8 +976,10 @@ typedef enum
 }
 surfaceType_t;
 
-#ifdef MAIN_C
 char            *surfaceTypes[ NUM_SURFACE_TYPES ]
+#ifndef MAIN_C
+;
+#else
 	=
 	{
 	"SURFACE_BAD",
@@ -995,8 +994,6 @@ char            *surfaceTypes[ NUM_SURFACE_TYPES ]
 	"SURFACE_DECAL",
 	"SURFACE_SHADER"
 	};
-#else
-extern char *surfaceTypes[ NUM_SURFACE_TYPES ];
 #endif
 
 
@@ -1436,7 +1433,6 @@ typedef struct rawLightmap_s
 
 	float                   *superDeluxels; /* average light direction */
 	float                   *bspDeluxels;
-	float                   *superFloodLight;
 }
 rawLightmap_t;
 
@@ -1505,7 +1501,7 @@ int                         BSPInfoMain( int argc, char **argv );
 int                         ScaleBSPMain( int argc, char **argv );
 
 /* minimap.c */
-int                         MiniMapBSPMain( int argc, char **argv );
+int							MiniMapBSPMain( int argc, char **argv );
 
 /* convert_bsp.c */
 int                         ConvertBSPMain( int argc, char **argv );
@@ -1770,10 +1766,6 @@ void                        MapRawLightmap( int num );
 void                        SetupDirt();
 float                       DirtForSample( trace_t *trace );
 void                        DirtyRawLightmap( int num );
-
-void                        SetupFloodLight();
-float                       FloodLightForSample( trace_t *trace );
-void                        FloodLightRawLightmap( int num );
 
 void                        IlluminateRawLightmap( int num );
 void                        IlluminateVertexes( int num );
@@ -2212,13 +2204,6 @@ Q_EXTERN float dirtDepth Q_ASSIGN( 128.0f );
 Q_EXTERN float dirtScale Q_ASSIGN( 1.0f );
 Q_EXTERN float dirtGain Q_ASSIGN( 1.0f );
 
-Q_EXTERN qboolean debugnormals Q_ASSIGN( qfalse );
-Q_EXTERN qboolean floodlighty Q_ASSIGN( qfalse );
-Q_EXTERN qboolean floodlight_lowquality Q_ASSIGN( qfalse );
-Q_EXTERN vec3_t floodlightRGB;
-Q_EXTERN float floodlightIntensity Q_ASSIGN( 512 );
-Q_EXTERN float floodlightDistance Q_ASSIGN( 1024 );
-
 Q_EXTERN qboolean dump Q_ASSIGN( qfalse );
 Q_EXTERN qboolean debug Q_ASSIGN( qfalse );
 Q_EXTERN qboolean debugUnused Q_ASSIGN( qfalse );
@@ -2238,7 +2223,6 @@ Q_EXTERN float bounceScale Q_ASSIGN( 0.25f );
 
 /* ydnar: lightmap gamma/compensation */
 Q_EXTERN float lightmapGamma Q_ASSIGN( 1.0f );
-Q_EXTERN float lightmapExposure Q_ASSIGN( 0.0f );
 Q_EXTERN float lightmapCompensate Q_ASSIGN( 1.0f );
 
 /* ydnar: for runtime tweaking of falloff tolerance */

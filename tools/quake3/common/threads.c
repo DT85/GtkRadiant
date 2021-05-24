@@ -26,8 +26,6 @@
 #include <pthread.h>
 #endif
 
-#include <stdint.h>
-
 #include "cmdlib.h"
 #include "mathlib.h"
 #include "inout.h"

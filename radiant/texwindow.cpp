@@ -1494,13 +1494,7 @@ void SelectTexture( int mx, int my, bool bShift, bool bFitScale ){
 					tex.scale[0] = g_PrefsDlg.m_fDefTextureScale;
 					tex.scale[1] = g_PrefsDlg.m_fDefTextureScale;
 				}
-				// jdolan - idTech2 games use shaders purely for editing convenience (e.g. QER_TRANS)
-				// these flags should not be set on idTech2 faces, as they collide with e.g. SURF_LIGHT
-				if ( g_pGameDescription->idTech2 ) {
-					tex.flags = 0;
-				} else {
-					tex.flags = pCurrentShader->getFlags();
-				}
+				tex.flags = pCurrentShader->getFlags();
 				// TTimo - shader code cleanup
 				// texdef.name is the name of the shader, not the name of the actual texture file
 				tex.SetName( pCurrentShader->getName() );

@@ -164,56 +164,13 @@ static void vfsInitPakFile( const char *filename ){
 	}
 }
 
-static int vfsPakSort(const void *a, const void *b) {
-	char    *s1, *s2;
-	int c1, c2;
-
-	s1 = (char*)a;
-	s2 = (char*)b;
-
-	do {
-		c1 = *s1++;
-		c2 = *s2++;
-
-		if (c1 >= 'a' && c1 <= 'z') {
-			c1 -= ('a' - 'A');
-		}
-		if (c2 >= 'a' && c2 <= 'z') {
-			c2 -= ('a' - 'A');
-		}
-
-		if (c1 == '\\' || c1 == ':') {
-			c1 = '/';
-		}
-		if (c2 == '\\' || c2 == ':') {
-			c2 = '/';
-		}
-
-		// Arnout: note - sort pakfiles in reverse order. This ensures that
-		// later pakfiles override earlier ones. This because the vfs module
-		// returns a filehandle to the first file it can find (while it should
-		// return the filehandle to the file in the most overriding pakfile, the
-		// last one in the list that is).
-		if (c1 < c2) {
-			//return -1;		// strings not equal
-			return 1;       // strings not equal
-		}
-		if (c1 > c2) {
-			//return 1;
-			return -1;
-		}
-	} while (c1);
-
-	return 0;       // strings are equal
-}
-
 // =============================================================================
 // Global functions
 
 // reads all pak files from a dir
 void vfsInitDirectory( const char *path ){
 	char filename[PATH_MAX];
-	GSList *dirlist = NULL;
+	char *dirlist;
 	GDir *dir;
 
 	if ( g_numDirs == ( VFS_MAXDIRS - 1 ) ) {
@@ -231,48 +188,38 @@ void vfsInitDirectory( const char *path ){
 		dir = g_dir_open( path, 0, NULL );
 
 		if ( dir != NULL ) {
-
-			while(1)
+			while ( 1 )
 			{
-				const char* name = g_dir_read_name(dir);
-				if (name == NULL) {
-					break;
-				}
-
-				char* direntry = g_strdup(name);
-				dirlist = g_slist_append(dirlist, direntry);
-			}
-
-			dirlist = g_slist_sort(dirlist, vfsPakSort);
-
-			while ( dirlist )
-			{
-				GSList *cur = dirlist;
-				char* name = (char*)cur->data;
+				const char* name = g_dir_read_name( dir );
 				if ( name == NULL ) {
 					break;
 				}
 
-				char *ext = strrchr(name, '.' );
+				dirlist = g_strdup( name );
 
-				if ( ext != NULL && ( !Q_stricmp( ext, ".pk3dir" ) || !Q_stricmp( ext, ".dpkdir" ) ) ) {
-					if ( g_numDirs == VFS_MAXDIRS ) {
+				{
+					char *ext = strrchr( dirlist, '.' );
+
+					if ( ext != NULL && ( !Q_stricmp( ext, ".pk3dir" ) || !Q_stricmp( ext, ".dpkdir" ) ) ) {
+						if ( g_numDirs == VFS_MAXDIRS ) {
+							continue;
+						}
+						snprintf( g_strDirs[g_numDirs], PATH_MAX, "%s/%s", path, name );
+						g_strDirs[g_numDirs][PATH_MAX-1] = '\0';
+						vfsFixDOSName( g_strDirs[g_numDirs] );
+						vfsAddSlash( g_strDirs[g_numDirs] );
+						++g_numDirs;
+					}
+
+					if ( ext == NULL || ( Q_stricmp( ext, ".pk3" ) != 0 && Q_stricmp( ext, ".dpk" ) != 0 ) ) {
 						continue;
 					}
-					snprintf( g_strDirs[g_numDirs], PATH_MAX, "%s/%s", path, name );
-					g_strDirs[g_numDirs][PATH_MAX-1] = '\0';
-					vfsFixDOSName( g_strDirs[g_numDirs] );
-					vfsAddSlash( g_strDirs[g_numDirs] );
-					++g_numDirs;
 				}
 
-				if ( ext != NULL && ( !Q_stricmp( ext, ".pk3" ) || !Q_stricmp( ext, ".dpk" )) ) {
-					sprintf(filename, "%s/%s", path, name);
-					vfsInitPakFile(filename);
-				}
+				sprintf( filename, "%s/%s", path, dirlist );
+				vfsInitPakFile( filename );
 
-				dirlist = g_slist_remove(cur, name);
-				g_free(name);
+				g_free( dirlist );
 			}
 			g_dir_close( dir );
 		}

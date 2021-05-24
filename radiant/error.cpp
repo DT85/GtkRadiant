@@ -111,24 +111,15 @@ void Error( const char *error, ... ){
 		}
 	}
 
-	// If a game has been selected in the global preferences, we can let
-	// the player edit that game's preferences to try to get it to work.
-	if (g_PrefsDlg.m_bSetGame) {
-		strcat( text, _( "An unrecoverable error has occured.\n"
-					"Would you like to edit Preferences before exiting Radiant?" ) );
+	strcat( text, _( "An unrecoverable error has occured.\n"
+				  "Would you like to edit Preferences before exiting Radiant?" ) );
 
-		Sys_Printf( text );
+	Sys_Printf( text );
 
-		if ( gtk_MessageBox( NULL, text, _( "Error" ), MB_YESNO ) == IDYES ) {
-			Sys_Printf( "Doing prefs..\n" );
-			g_PrefsDlg.LoadPrefs();
-			g_PrefsDlg.DoModal();
-		}
-	}
-	else {
-		strcat( text, _( "An unrecoverable error has occured." ) );
-		Sys_Printf( text );
-		gtk_MessageBox( NULL, text, _( "Error" ), MB_ICONEXCLAMATION );
+	if ( gtk_MessageBox( NULL, text, _( "Error" ), MB_YESNO ) == IDYES ) {
+		Sys_Printf( "Doing prefs..\n" );
+		g_PrefsDlg.LoadPrefs();
+		g_PrefsDlg.DoModal();
 	}
 
 	QGL_Shutdown();
